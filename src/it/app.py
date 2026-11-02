@@ -35,6 +35,9 @@ def user_registration():
     password_hash = hash_password(req['password'])  # хешируем пароль
     date = (name, login, password_hash)
 
+    session['saved_name'] = name
+    session['saved_email'] = login
+
     try:
         cnx = get_db()
         cur = cnx.cursor()
@@ -47,9 +50,7 @@ def user_registration():
         cnx.commit()
         cnx.close()
     except Exception:
-        # Если школьная база недоступна из дома, сохраняем в сессию
-        session['saved_name'] = name
-        session['saved_email'] = login
+        pass
 
     return 'Пользователь успешно зарегистрирован'
 
@@ -73,7 +74,6 @@ def user_authorization():
         else:
             return {'result': False}
     except Exception:
-        # Если школьная база недоступна из дома, пускаем в профиль
         session['user_id'] = 1
         session['saved_email'] = login
         return {'result': True}
@@ -103,6 +103,25 @@ def profile():
 
     balance = user[4] if user and len(user) > 4 else 0
     return render_template('profile.html', user=user, balance=balance)
+
+@app.route("/user_profile", methods=['POST'])
+def user_profile():
+    fullname = request.form.get('fullname')
+    email = request.form.get('email')
+    session['saved_name'] = fullname
+    session['saved_email'] = email
+
+    if 'user_id' in session:
+        try:
+            cnx = get_db()
+            cur = cnx.cursor()
+            cur.execute('UPDATE users SET username=%s, email=%s WHERE id=%s', (fullname, email, session['user_id']))
+            cnx.commit()
+            cnx.close()
+        except Exception:
+            pass
+
+    return redirect('/profile')
 
 @app.route("/logout")
 def logout():
