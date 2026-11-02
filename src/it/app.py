@@ -3,6 +3,9 @@ import mysql.connector
 import hashlib
 import os
 
+app = Flask(__name__)
+app.secret_key = '1581'
+
 salt = os.fsencode('привет')
 def hash_password(password):
     password_bytes = password.encode('utf-8')
@@ -19,8 +22,6 @@ def connection():
         password="Qwerty123")
     return req, cnx
 
-app = Flask(__name__)  
-
 
 @app.route('/user_register', methods=['POST'])
 def user_registration():
@@ -36,7 +37,7 @@ def user_registration():
         cnx.close()
         return jsonify({'error': 'Пользователь с таким email уже существует'}), 409
 
-    cur.execute('INSERT INTO `users`(`username`, `email`, `password_hash`) VALUES (%s, %s, %s)', date)
+    rows = cur.execute('INSERT INTO `users`(`username`, `email`, `password_hash`) VALUES (%s, %s, %s)', date)
     cnx.commit()
     cnx.close()
 
@@ -51,26 +52,29 @@ def user_authorization():
     date = (login, password_hash)
     cur = cnx.cursor()
 
-    cur.execute('SELECT * FROM users WHERE email=%s AND password_hash=%s', date)
+    rows = cur.execute('SELECT * FROM users WHERE email=%s AND password_hash=%s', date)
     user = cur.fetchone()
-    cnx.close()
+    if user:
+        session['user_id'] = user[0]
+        cnx.close()
+        return {'result': True}
+    else:
+        cnx.close()
+        return {'result': False}
 
-    if user is None:
-        return jsonify({'error': 'Неверный логин или пароль'}), 401
-
-    return jsonify({'result': True})
-
-@app.route("/login")
-def login():
-    return render_template('login.html')
 
 @app.route("/")
 def registration():
     return render_template('registration.html')
 
+@app.route("/login")
+def login():
+    return render_template('login.html')
+
 @app.route("/profile")
 def profile():
-    return render_template('profile.html')
+    # user = 'Select...'.fetchone()
+    # balance = 
+    return render_template('profile.html', user=session['user_id'])
 
-if __name__ == '__main__':
-    app.run()
+app.run(port=8000)
