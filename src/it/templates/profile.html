@@ -87,16 +87,22 @@
     <div class="card">
         <h2>Профиль</h2>
         <form action="/user_profile" method="post" id="profile">
-            <!-- Поле Имя -->
+            <!-- Поле Имя и Фамилия -->
             <div class="form-group">
-                <label for="fullname">Ваше имя</label>
-                <input type="text" id="fullname" name="fullname" placeholder="Иван Иванов" required>
+                <label for="fullname">Ваше имя и фамилия</label>
+                <input type="text" id="fullname" name="fullname" value="{{ user[1] if user and user is not number else '' }}" placeholder="Иван Иванов" required>
             </div>
 
             <!-- Поле Email -->
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="example@mail.ru" required>
+                <input type="email" id="email" name="email" value="{{ user[2] if user and user is not number else '' }}" placeholder="example@mail.ru" required>
+            </div>
+
+            <!-- Поле Баланс -->
+            <div class="form-group">
+                <label for="balance">Баланс</label>
+                <input type="text" id="balance" name="balance" value="{{ balance if balance is defined else 0 }}" readonly>
             </div>
 
             <button type="submit">Сохранить</button>
